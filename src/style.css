@@ -38,6 +38,7 @@ kbd { font-family: inherit; font-size: 8px; border: 1px solid #ffffff40; border-
 .hints b { font-weight: 400; color: #fff6df; margin-left: 4px; }
 .coordinates, .version { bottom: 31px; font-size: 9px; letter-spacing: 1.5px; color: #f3f0d9b0; }
 .coordinates { left: 36px; }.version { right: 36px; }.version span { color: #edce8d; margin-left: 8px; }
+.save-status { position: fixed; z-index: 2; right: 36px; top: 81px; font-size: 9px; letter-spacing: 1.5px; color: #f3f0d9c0; text-shadow: 0 2px 6px #0008; }
 .crosshair { display: none; position: fixed; z-index: 2; left: 50%; top: 50%; width: 16px; height: 16px; transform: translate(-50%, -50%); pointer-events: none; }
 .inspect-status { position: fixed; z-index: 2; top: 81px; left: 36px; padding: 9px 12px; border: 1px solid #edce8d88; border-radius: 5px; background: #142924c9; color: #edce8d; font-size: 10px; letter-spacing: 1.2px; }
 .inspect-status span { color: #f3f0d9; letter-spacing: 0; margin-left: 12px; }
@@ -46,3 +47,4 @@ body:not(.playing) .inspect-status { display: none; }
 .playing .crosshair { display: block; }[hidden] { display: none !important; }
 @media (max-width: 760px) { .brand { top: 20px; left: 20px; }.badge, .world-tag, .version, .coordinates { display: none; }.panel { left: 7%; top: 44%; }.hud { bottom: 16px; }.slot { width: 43px; height: 46px; }.hints { gap: 8px; font-size: 7px; }h1 { letter-spacing: -2px; }.instructions { gap: 10px; }.inspect-status { left: 20px; right: 20px; top: 65px; }.inspect-status span { display: block; margin: 5px 0 0; } }
 @media (max-height: 650px) { .panel { top: 46%; }h1 { font-size: 40px; margin-bottom: 12px; }.eyebrow { margin-bottom: 12px; }.panel p { margin-bottom: 15px; }.instructions { margin-top: 14px; }.notice { margin-top: 10px; }.hud { bottom: 12px; } }
+@media (max-width: 760px) { .save-status { right: 20px; top: 28px; } }

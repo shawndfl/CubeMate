@@ -3,8 +3,10 @@ import { BLOCKS, CHUNK, HEIGHT, SIZE } from './blocks.ts';
 export class World {
   readonly data = new Uint8Array(SIZE * SIZE * HEIGHT);
   readonly dirty = new Set<string>();
+  readonly edits = new Map<number, number>();
+  private original: Uint8Array;
   readonly seed: number;
-  constructor(seed = 7319) { this.seed = seed; this.generate(); }
+  constructor(seed = 7319) { this.seed = seed; this.generate(); this.original = this.data.slice(); }
   inside(x: number, y: number, z: number) {
     return Number.isInteger(x) && Number.isInteger(y) && Number.isInteger(z) && x >= 0 && z >= 0 && y >= 0 && x < SIZE && z < SIZE && y < HEIGHT;
   }
@@ -14,7 +16,12 @@ export class World {
   set(x: number, y: number, z: number, block: number): boolean {
     if (!this.inside(x, y, z) || y === 0 || !Number.isInteger(block) || block < 0 || block >= BLOCKS.length) return false;
     if (this.get(x, y, z) === block) return false;
-    this.data[x + SIZE * (z + SIZE * y)] = block;
+    const index = x + SIZE * (z + SIZE * y);
+    this.data[index] = block;
+    if (this.original) {
+      if (block === this.original[index]) this.edits.delete(index);
+      else this.edits.set(index, block);
+    }
     for (const [dx, dz] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]) {
       if (x + dx >= 0 && x + dx < SIZE && z + dz >= 0 && z + dz < SIZE)
         this.dirty.add(`${Math.floor((x + dx) / CHUNK)},${Math.floor((z + dz) / CHUNK)}`);
@@ -24,6 +31,12 @@ export class World {
   surface(x: number, z: number) {
     for (let y = HEIGHT - 1; y >= 0; y--) if (this.get(x, y, z)) return y + 1;
     return 1;
+  }
+  savedEdits(): number[][] {
+    return [...this.edits].map(([index, block]) => {
+      const x = index % SIZE, z = Math.floor(index / SIZE) % SIZE, y = Math.floor(index / (SIZE * SIZE));
+      return [x, y, z, block];
+    });
   }
   private noise(x: number, z: number) {
     const value = Math.sin(x * 127.1 + z * 311.7 + this.seed) * 43758.5453;

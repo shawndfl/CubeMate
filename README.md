@@ -30,4 +30,4 @@ npm run preview
 
 The world is 96 × 48 × 96 blocks, split into 16 × 16 horizontal chunks. Only exposed faces are rendered. Edits rebuild the affected chunk and its neighbors at boundaries; replaced GPU geometry is disposed. Physics advances at 120 Hz with a capped frame delta.
 
-This initial framework targets desktop browsers with WebGL and pointer lock. There are no saves, mobile controls, multiplayer, crafting, or streamed terrain yet. Reloading regenerates seed 7319 and discards edits. Fonts optionally load from Google Fonts with system fallbacks.
+This initial framework targets desktop browsers with WebGL and pointer lock. Block edits, player position and view, inspect mode, and selected block save automatically to this browser's local storage and restore on reload. Clearing site data removes the save. The save is local to this browser and origin; private browsing or disabled/full storage may prevent it. There are no mobile controls, multiplayer, crafting, or streamed terrain yet. Fonts optionally load from Google Fonts with system fallbacks.

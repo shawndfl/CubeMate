@@ -16,11 +16,12 @@ export class UI {
         <p>Find your corner of the wilderness.<br>Break a block. Build something new.</p>
         <button class="start">Enter the world <span>↗</span></button>
         <div class="instructions"><span><kbd>W A S D</kbd> Move</span><span><kbd>MOUSE</kbd> Look</span><span><kbd>SPACE</kbd> Jump</span><span><kbd>SHIFT</kbd> Run</span><span><kbd>F</kbd> Inspect</span></div>
-        <div class="notice" role="status">Desktop · keyboard & mouse · changes last for this session</div>
+        <div class="notice" role="status">Desktop · keyboard & mouse · saves automatically in this browser</div>
       </section>
       <footer class="hud"><div class="selected-name">Grass</div><div class="hotbar" aria-label="Block palette"></div><div class="hints"><span>LEFT CLICK <b>Break</b></span><span>RIGHT CLICK <b>Place</b></span><span>1–6 <b>Select</b></span><span>F <b>Inspect</b></span><span>ESC <b>Pause</b></span></div></footer>
       <div class="inspect-status" aria-live="polite" hidden>INSPECT MODE <span>WASD Fly · SPACE Up · C Down · SHIFT Boost · F Exit</span></div>
       <div class="coordinates">EXPLORING THE WILDS</div><div class="version">CREATIVE PROTOTYPE <span>v0.1</span></div>
+      <div class="save-status" role="status">AUTOSAVE ON</div>
     `);
     this.panel = root.querySelector('.panel')!; this.start = root.querySelector('.start')!;
     this.status = root.querySelector('.notice')!;
@@ -49,6 +50,7 @@ export class UI {
     document.body.classList.toggle('inspecting', active);
   }
   error(message: string) { this.status.textContent = message; }
+  saveStatus(message: string) { document.querySelector('.save-status')!.textContent = message.toUpperCase(); }
   coordinates(x: number, y: number, z: number) {
     document.querySelector('.coordinates')!.textContent = `X ${Math.floor(x)} / Y ${Math.floor(y)} / Z ${Math.floor(z)}`;
   }

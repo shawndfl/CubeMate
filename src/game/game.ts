@@ -5,6 +5,7 @@ import { Player, EYE_HEIGHT, overlaps } from '../player/physics.ts';
 import { Input } from '../input/input.ts';
 import { View } from '../rendering/renderer.ts';
 import { UI } from '../ui/ui.ts';
+import { AutoSave, restore, SAVE_KEY } from './save.ts';
 
 export class Game {
   constructor(root: HTMLElement) {
@@ -20,6 +21,12 @@ export class Game {
     const world = new World(),
       player = new Player(world),
       input = new Input(view.renderer.domElement);
+    let stored: string | null = null;
+    try { stored = localStorage.getItem(SAVE_KEY); }
+    catch { ui.saveStatus('Autosave unavailable'); }
+    const selected = restore(stored, world, player);
+    if (selected !== null) { ui.select(selected); ui.setInspect(player.inspecting); ui.saveStatus('World restored'); }
+    const autosave = new AutoSave(world, player, () => ui.selected, () => ui.saveStatus('Autosave unavailable'));
     const direction = new Vector3();
     const aim = () => trace(world, view.camera.position, view.camera.getWorldDirection(direction));
     const syncCamera = () => {
@@ -31,24 +38,30 @@ export class Game {
     input.onLook = (x, y) => {
       player.yaw -= x * 0.002;
       player.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, player.pitch - y * 0.002));
+      autosave.schedule();
     };
-    input.onSelect = (slot) => ui.select(slot);
+    input.onSelect = (slot) => { ui.select(slot); autosave.schedule(); };
     input.onInspect = () => {
       player.toggleInspect();
       ui.setInspect(player.inspecting);
+      autosave.schedule();
     };
     input.onAction = (button) => {
       syncCamera();
       const hit = aim();
       if (!hit) return;
-      if (button === 0) world.set(hit.block.x, hit.block.y, hit.block.z, 0);
+      let changed = false;
+      if (button === 0) changed = world.set(hit.block.x, hit.block.y, hit.block.z, 0);
       if (
         button === 2 &&
         !overlaps(player.position, hit.adjacent) &&
         !world.get(hit.adjacent.x, hit.adjacent.y, hit.adjacent.z)
       )
-        world.set(hit.adjacent.x, hit.adjacent.y, hit.adjacent.z, ui.selected + 1);
+        changed = world.set(hit.adjacent.x, hit.adjacent.y, hit.adjacent.z, ui.selected + 1);
+      if (changed) autosave.schedule();
     };
+    window.addEventListener('pagehide', () => autosave.flush());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) autosave.flush(); });
     ui.start.addEventListener('click', () => {
       input.lock().catch(() => ui.error('Mouse capture was blocked. Click Enter again to retry.'));
     });
@@ -64,6 +77,7 @@ export class Game {
     view.rebuild(world);
     let last = performance.now(),
       accumulator = 0;
+    let positionSave = 0;
     const tick = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.1);
       last = now;
@@ -73,6 +87,8 @@ export class Game {
           player.update(1 / 120, input.keys);
           accumulator -= 1 / 120;
         }
+        positionSave += dt;
+        if (positionSave >= 2) { positionSave = 0; autosave.schedule(); }
       } else accumulator = 0;
       syncCamera();
       view.rebuild(world);
