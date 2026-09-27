@@ -2,7 +2,7 @@ import { CHUNK, GLOW_BRICK, HEIGHT, SIZE } from './blocks.ts';
 import type { World } from './world.ts';
 
 const indexOf = (x: number, y: number, z: number) => x + SIZE * (z + SIZE * y);
-const neighbors = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+const LAYER = SIZE * SIZE;
 
 // Light occupies air cells. Solid blocks stop both sunlight and emitted light.
 export class VoxelLighting {
@@ -14,30 +14,43 @@ export class VoxelLighting {
     for (let x = 0; x < SIZE; x++) for (let z = 0; z < SIZE; z++) {
       for (let y = HEIGHT - 1; y >= 0 && !world.get(x, y, z); y--) {
         const index = indexOf(x, y, z);
-        sky[index] = 15; skyQueue.push(index);
+        sky[index] = 15;
       }
     }
     for (let i = 0; i < world.data.length; i++) if (world.data[i] === GLOW_BRICK) {
       block[i] = 15; blockQueue.push(i);
     }
+    // Only the edge of direct sunlight needs propagation into shaded air.
+    for (let i = 0; i < sky.length; i++) if (sky[i] === 15) {
+      const x = i % SIZE, z = Math.floor(i / SIZE) % SIZE;
+      if ((x > 0 && !sky[i - 1] && !world.data[i - 1]) ||
+          (x < SIZE - 1 && !sky[i + 1] && !world.data[i + 1]) ||
+          (z > 0 && !sky[i - SIZE] && !world.data[i - SIZE]) ||
+          (z < SIZE - 1 && !sky[i + SIZE] && !world.data[i + SIZE])) skyQueue.push(i);
+    }
     const spread = (values: Uint8Array, queue: number[]) => {
       for (let head = 0; head < queue.length; head++) {
         const index = queue[head], level = values[index] - 1;
         if (level <= 0) continue;
-        const x = index % SIZE, z = Math.floor(index / SIZE) % SIZE, y = Math.floor(index / (SIZE * SIZE));
-        for (const [dx, dy, dz] of neighbors) {
-          const nx = x + dx, ny = y + dy, nz = z + dz;
-          if (!world.inside(nx, ny, nz) || world.get(nx, ny, nz)) continue;
-          const next = indexOf(nx, ny, nz);
-          if (values[next] >= level) continue;
+        const x = index % SIZE, z = Math.floor(index / SIZE) % SIZE;
+        const visit = (next: number) => {
+          if (world.data[next] || values[next] >= level) return;
           values[next] = level; queue.push(next);
-        }
+        };
+        if (x > 0) visit(index - 1);
+        if (x < SIZE - 1) visit(index + 1);
+        if (z > 0) visit(index - SIZE);
+        if (z < SIZE - 1) visit(index + SIZE);
+        if (index >= LAYER) visit(index - LAYER);
+        if (index < values.length - LAYER) visit(index + LAYER);
       }
     };
     spread(sky, skyQueue); spread(block, blockQueue);
     // Rebuild only chunks with changed lighting, including faces across borders.
-    for (let i = 0; i < sky.length; i++) if (sky[i] !== this.sky[i] || block[i] !== this.block[i]) {
-      const x = i % SIZE, z = Math.floor(i / SIZE) % SIZE;
+    const changedColumns = new Uint8Array(LAYER);
+    for (let i = 0; i < sky.length; i++) if (sky[i] !== this.sky[i] || block[i] !== this.block[i]) changedColumns[i % LAYER] = 1;
+    for (let column = 0; column < LAYER; column++) if (changedColumns[column]) {
+      const x = column % SIZE, z = Math.floor(column / SIZE);
       for (const dx of [-1, 0, 1]) for (const dz of [-1, 0, 1]) {
         if (x + dx >= 0 && x + dx < SIZE && z + dz >= 0 && z + dz < SIZE)
           world.dirty.add(`${Math.floor((x + dx) / CHUNK)},${Math.floor((z + dz) / CHUNK)}`);

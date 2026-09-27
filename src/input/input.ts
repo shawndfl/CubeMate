@@ -1,3 +1,5 @@
+import { BLOCKS } from '../world/blocks.ts';
+
 export class Input {
   private readonly repeatTimers = new Map<number, ReturnType<typeof setInterval>>();
   readonly keys = new Set<string>();
@@ -32,7 +34,8 @@ export class Input {
         e.preventDefault();
       this.keys.add(e.code);
       if (e.code === 'KeyF' && !e.repeat) this.onInspect();
-      if (/^Digit[1-6]$/.test(e.code)) this.onSelect(Number(e.code.slice(-1)) - 1);
+      if (/^Digit[1-9]$/.test(e.code) && Number(e.code.slice(-1)) < BLOCKS.length)
+        this.onSelect(Number(e.code.slice(-1)) - 1);
     });
     document.addEventListener('keyup', (e) => this.keys.delete(e.code));
 

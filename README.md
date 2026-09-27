@@ -1,6 +1,6 @@
-# CubeMate
+﻿# CubeMate
 
-A small first-person voxel sandbox built with TypeScript, Three.js, and Vite. Original procedural block textures, seeded hills and trees, a six-block palette, chunk meshes, and fixed-step player physics.
+A small first-person voxel sandbox built with TypeScript, Three.js, and Vite. Original procedural block textures, seeded hills and trees, a seven-block palette, chunk meshes, and fixed-step player physics.
 
 ## Run
 
@@ -11,9 +11,11 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite. Click **Enter the world** to capture the mouse. WASD moves, mouse looks, Space jumps, Shift runs, left-click breaks, right-click places, 1–6 selects a block, and Escape pauses. Press F to toggle inspect mode: fly in the direction you look with WASD, rise with Space, descend with C, and boost with Shift. Inspect mode ignores terrain and world boundaries. If you exit inspect mode inside a block or beyond the world boundary, you return to the position where you entered it. The bottom stone layer is protected. World edges stop the player in normal mode.
+Open the local URL printed by Vite. Click **Enter the world** to capture the mouse. WASD moves, mouse looks, Space jumps, Shift runs, left-click breaks, right-click places, 1–7 selects a block, and Escape pauses. Press F to toggle inspect mode: fly in the direction you look with WASD, rise with Space, descend with C, and boost with Shift. Inspect mode ignores terrain and world boundaries. If you exit inspect mode inside a block or beyond the world boundary, you return to the position where you entered it. The bottom stone layer is protected. World edges stop the player in normal mode.
 
 Hold left or right mouse button to keep breaking or placing blocks. The first action happens immediately, then repeats every 200 ms until release.
+
+Select **7 — Glow Brick** to place a warm light source. Glow bricks stay bright at night and illuminate nearby air up to 14 blocks away along unobstructed paths. Solid blocks stop the light; removing a glow brick updates nearby surfaces. Vertex ambient occlusion darkens corners and crevices, while fixed face shading and propagated skylight give terrain a voxel-style appearance. Light and AO update across chunk boundaries. Existing saves remain compatible.
 
 A sun and moon track a ten-minute day/night cycle with changing sky, fog, and lighting. The cycle pauses when gameplay is paused and its progress is autosaved. Night retains enough ambient light to build and explore. Adjust `DAY_DURATION` in `src/world/day-cycle.ts` to change the cycle length.
 
@@ -35,3 +37,4 @@ npm run preview
 The world is 96 × 48 × 96 blocks, split into 16 × 16 horizontal chunks. Only exposed faces are rendered. Edits rebuild the affected chunk and its neighbors at boundaries; replaced GPU geometry is disposed. Physics advances at 120 Hz with a capped frame delta.
 
 This initial framework targets desktop browsers with WebGL and pointer lock. Block edits, player position and view, inspect mode, and selected block save automatically to this browser's local storage and restore on reload. Clearing site data removes the save. The save is local to this browser and origin; private browsing or disabled/full storage may prevent it. There are no mobile controls, multiplayer, crafting, or streamed terrain yet. Fonts optionally load from Google Fonts with system fallbacks.
+

@@ -11,7 +11,7 @@ test('terrain is repeatable and seeds change terrain', () => {
 test('boundary edits invalidate both chunks and reject invalid positions', () => {
   const world = new World(); world.dirty.clear();
   assert.equal(world.set(15, 40, 15, 3), true);
-  assert.deepEqual([...world.dirty].sort(), ['0,0', '0,1', '1,0']);
+  assert.deepEqual([...world.dirty].sort(), ['0,0', '0,1', '1,0', '1,1']);
   assert.equal(world.set(-1, 20, 0, 1), false);
   assert.equal(world.set(0, 0, 0, 0), false);
   assert.equal(world.set(0.5, 20, 0, 1), false);
