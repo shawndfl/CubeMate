@@ -4,6 +4,7 @@ import type { Vec } from '../world/raycast.ts';
 export const RADIUS = 0.3,
   BODY_HEIGHT = 1.8,
   EYE_HEIGHT = 1.62;
+
 export function overlaps(position: Vec, block: Vec) {
   return (
     position.x + RADIUS > block.x &&
@@ -14,6 +15,7 @@ export function overlaps(position: Vec, block: Vec) {
     position.z - RADIUS < block.z + 1
   );
 }
+
 export function collides(world: World, p: Vec) {
   if (p.x - RADIUS < 0 || p.z - RADIUS < 0 || p.x + RADIUS > SIZE || p.z + RADIUS > SIZE) return true;
   const epsilon = 0.00001;
@@ -23,6 +25,7 @@ export function collides(world: World, p: Vec) {
         if (world.get(x, y, z)) return true;
   return false;
 }
+
 export class Player {
   position: Vec = { x: 48.5, y: 30, z: 48.5 };
   yaw = 0.65;
@@ -47,6 +50,7 @@ export class Player {
     this.verticalSpeed = 0;
     this.grounded = false;
   }
+
   update(dt: number, keys: Set<string>) {
     if (this.inspecting) {
       const forward = Number(keys.has('KeyW')) - Number(keys.has('KeyS'));
@@ -96,6 +100,8 @@ export class Player {
         }
       }
     }
+
+    // fall to your death
     if (this.position.y < -10) this.respawn();
   }
 }
