@@ -34,3 +34,34 @@ test('player lands, jumps, and cannot walk through a wall', () => {
   player.update(1 / 120, new Set(['Space'])); assert.ok(player.verticalSpeed > 0); assert.ok(player.position.y > 11);
   assert.equal(overlaps(player.position, { x: 48, y: 11, z: 46 }), true);
 });
+test('inspect mode flies through terrain and returns to a safe position on exit', () => {
+  const world = new World(); world.data.fill(0);
+  for (let y = 9; y < 15; y++) world.set(48, y, 47, 3);
+  const player = new Player(world); player.position = { x: 48.5, y: 10, z: 48.5 }; player.yaw = 0;
+  const start = { ...player.position };
+  player.toggleInspect();
+  for (let i = 0; i < 18; i++) player.update(1 / 120, new Set(['KeyW']));
+  assert.ok(player.position.z < 47.3);
+  assert.equal(collides(world, player.position), true);
+  player.toggleInspect();
+  assert.deepEqual(player.position, start);
+  assert.equal(player.inspecting, false);
+});
+test('inspect mode follows the view and uses vertical controls without gravity', () => {
+  const world = new World(); const player = new Player(world);
+  player.yaw = 0; player.pitch = Math.PI / 4;
+  player.toggleInspect();
+  const start = { ...player.position };
+  player.update(0.1, new Set(['KeyW']));
+  assert.ok(player.position.y > start.y);
+  player.pitch = -Math.PI / 4;
+  const beforeDownwardFlight = player.position.y;
+  player.update(0.1, new Set(['KeyW']));
+  assert.ok(player.position.y < beforeDownwardFlight);
+  const afterForward = player.position.y;
+  player.update(0.1, new Set(['KeyC']));
+  assert.ok(player.position.y < afterForward);
+  const afterDown = player.position.y;
+  player.update(0.1, new Set());
+  assert.equal(player.position.y, afterDown);
+});
