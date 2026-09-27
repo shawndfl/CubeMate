@@ -1,0 +1,33 @@
+# CubeMate
+
+A small first-person voxel sandbox built with TypeScript, Three.js, and Vite. Original procedural block textures, seeded hills and trees, a six-block palette, chunk meshes, and fixed-step player physics.
+
+## Run
+
+Requires Node.js 22.18+ (or Node.js 24+) and npm.
+
+```sh
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite. Click **Enter the world** to capture the mouse. WASD moves, mouse looks, Space jumps, Shift runs, left-click breaks, right-click places, 1–6 selects a block, and Escape pauses. The bottom stone layer is protected. World edges stop the player.
+
+```sh
+npm test
+npm run build
+npm run preview
+```
+
+## Structure
+
+- `src/world`: deterministic terrain, block data, edit invalidation, voxel ray traversal.
+- `src/rendering`: exposed-face chunk meshes, lighting, procedural texture, target outline.
+- `src/player`: player bounds, collision, gravity, jumping.
+- `src/input`: keyboard and pointer lock.
+- `src/game`: fixed-step simulation and interaction orchestration.
+- `src/ui`: start/pause panel and block palette.
+
+The world is 96 × 48 × 96 blocks, split into 16 × 16 horizontal chunks. Only exposed faces are rendered. Edits rebuild the affected chunk and its neighbors at boundaries; replaced GPU geometry is disposed. Physics advances at 120 Hz with a capped frame delta.
+
+This initial framework targets desktop browsers with WebGL and pointer lock. There are no saves, mobile controls, multiplayer, crafting, or streamed terrain yet. Reloading regenerates seed 7319 and discards edits. Fonts optionally load from Google Fonts with system fallbacks.
