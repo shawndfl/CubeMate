@@ -1,4 +1,5 @@
 export class Input {
+  private readonly repeatTimers = new Map<number, ReturnType<typeof setInterval>>();
   readonly keys = new Set<string>();
   locked = false;
   onLock = (_locked: boolean) => {};
@@ -15,10 +16,12 @@ export class Input {
     document.addEventListener('pointerlockchange', () => {
       this.locked = document.pointerLockElement === canvas;
       this.keys.clear();
+      if (!this.locked) this.stopActions();
       this.onLock(this.locked);
     });
     window.addEventListener('blur', () => {
       this.keys.clear();
+      this.stopActions();
       if (this.locked) document.exitPointerLock();
     });
 
@@ -38,12 +41,28 @@ export class Input {
       if (this.locked) this.onLook(e.movementX, e.movementY);
     });
     canvas.addEventListener('mousedown', (e) => {
-      if (this.locked) this.onAction(e.button);
+      if (!this.locked || (e.button !== 0 && e.button !== 2) || this.repeatTimers.has(e.button)) return;
+      this.onAction(e.button);
+      this.repeatTimers.set(
+        e.button,
+        setInterval(() => {
+          if (this.locked) this.onAction(e.button);
+        }, 200),
+      );
     });
+    document.addEventListener('mouseup', (e) => this.stopAction(e.button));
     // no right click
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
   async lock() {
     await this.canvas.requestPointerLock();
+  }
+  private stopAction(button: number) {
+    const timer = this.repeatTimers.get(button);
+    if (timer !== undefined) clearInterval(timer);
+    this.repeatTimers.delete(button);
+  }
+  private stopActions() {
+    for (const button of this.repeatTimers.keys()) this.stopAction(button);
   }
 }

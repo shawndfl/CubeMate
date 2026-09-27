@@ -13,6 +13,8 @@ npm run dev
 
 Open the local URL printed by Vite. Click **Enter the world** to capture the mouse. WASD moves, mouse looks, Space jumps, Shift runs, left-click breaks, right-click places, 1–6 selects a block, and Escape pauses. Press F to toggle inspect mode: fly in the direction you look with WASD, rise with Space, descend with C, and boost with Shift. Inspect mode ignores terrain and world boundaries. If you exit inspect mode inside a block or beyond the world boundary, you return to the position where you entered it. The bottom stone layer is protected. World edges stop the player in normal mode.
 
+Hold left or right mouse button to keep breaking or placing blocks. The first action happens immediately, then repeats every 500 ms until release.
+
 ```sh
 npm test
 npm run build
