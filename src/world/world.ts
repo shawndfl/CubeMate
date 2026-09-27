@@ -1,6 +1,8 @@
 import { BLOCKS, CHUNK, HEIGHT, SIZE } from './blocks.ts';
+import { START_TIME } from './day-cycle.ts';
 
 export class World {
+  timeOfDay = START_TIME;
   readonly data = new Uint8Array(SIZE * SIZE * HEIGHT);
   readonly dirty = new Set<string>();
   readonly edits = new Map<number, number>();
@@ -22,7 +24,7 @@ export class World {
       if (block === this.original[index]) this.edits.delete(index);
       else this.edits.set(index, block);
     }
-    for (const [dx, dz] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]) {
+    for (const dx of [-1, 0, 1]) for (const dz of [-1, 0, 1]) {
       if (x + dx >= 0 && x + dx < SIZE && z + dz >= 0 && z + dz < SIZE)
         this.dirty.add(`${Math.floor((x + dx) / CHUNK)},${Math.floor((z + dz) / CHUNK)}`);
     }

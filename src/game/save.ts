@@ -9,6 +9,7 @@ type Save = {
   edits: number[][];
   player: { x: number; y: number; z: number; yaw: number; pitch: number; inspecting: boolean };
   selected: number;
+  timeOfDay?: number;
 };
 
 function finite(value: unknown): value is number { return typeof value === 'number' && Number.isFinite(value); }
@@ -29,6 +30,8 @@ export function restore(raw: string | null, world: World, player: Player): numbe
       !finite(data.player.z) || !finite(data.player.yaw) || !finite(data.player.pitch) ||
       typeof data.player.inspecting !== 'boolean' ||
       !Number.isInteger(data.selected) || data.selected! < 0 || data.selected! >= BLOCKS.length - 1) return null;
+    if (data.timeOfDay !== undefined && (!finite(data.timeOfDay) || data.timeOfDay < 0 || data.timeOfDay >= 1)) return null;
+    if (data.timeOfDay !== undefined) world.timeOfDay = data.timeOfDay;
     for (const [x, y, z, block] of data.edits) world.set(x, y, z, block);
     const position = { x: data.player.x, y: data.player.y, z: data.player.z };
     if (data.player.inspecting) {
@@ -44,6 +47,7 @@ export function restore(raw: string | null, world: World, player: Player): numbe
 export function serialize(world: World, player: Player, selected: number): string {
   const save: Save = {
     version: 1, seed: world.seed, edits: world.savedEdits(),
+    timeOfDay: world.timeOfDay,
     player: { ...player.position, yaw: player.yaw, pitch: player.pitch, inspecting: player.inspecting }, selected,
   };
   return JSON.stringify(save);

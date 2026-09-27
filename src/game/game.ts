@@ -6,6 +6,7 @@ import { Input } from '../input/input.ts';
 import { View } from '../rendering/renderer.ts';
 import { UI } from '../ui/ui.ts';
 import { AutoSave, restore, SAVE_KEY } from './save.ts';
+import { advanceTime } from '../world/day-cycle.ts';
 
 export class Game {
   constructor(root: HTMLElement) {
@@ -82,6 +83,7 @@ export class Game {
       const dt = Math.min((now - last) / 1000, 0.1);
       last = now;
       if (input.locked) {
+        world.timeOfDay = advanceTime(world.timeOfDay, dt);
         accumulator += dt;
         while (accumulator >= 1 / 120) {
           player.update(1 / 120, input.keys);
@@ -96,7 +98,7 @@ export class Game {
       view.outline.visible = !!hit;
       if (hit) view.outline.position.set(hit.block.x + 0.5, hit.block.y + 0.5, hit.block.z + 0.5);
       ui.coordinates(player.position.x, player.position.y, player.position.z);
-      view.render();
+      view.render(world.timeOfDay);
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { BLOCKS, CHUNK, HEIGHT } from '../world/blocks.ts';
 import type { World } from '../world/world.ts';
+import { Sky } from './sky.ts';
 
 const faces = [
   {
@@ -93,6 +94,7 @@ export class View {
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(75, 1, 0.05, 160);
   readonly renderer = new THREE.WebGLRenderer({ antialias: true });
+  private sky = new Sky(this.scene);
   private meshes = new Map<string, THREE.Mesh>();
   private material = new THREE.MeshLambertMaterial({ vertexColors: true, map: texture() });
   readonly outline = new THREE.LineSegments(
@@ -102,12 +104,8 @@ export class View {
   constructor(container: HTMLElement) {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     container.prepend(this.renderer.domElement);
-    this.scene.background = new THREE.Color('#b8d8de');
+    this.renderer.autoClear = false;
     this.scene.fog = new THREE.Fog('#b8d8de', 38, 105);
-    this.scene.add(new THREE.HemisphereLight(0xf3fbff, 0x617450, 2));
-    const sun = new THREE.DirectionalLight(0xffedcf, 2.1);
-    sun.position.set(35, 70, 25);
-    this.scene.add(sun);
     this.scene.add(this.outline);
     this.outline.visible = false;
     this.camera.rotation.order = 'YXZ';
@@ -167,7 +165,11 @@ export class View {
     }
     world.dirty.clear();
   }
-  render() {
+  render(time: number) {
+    this.sky.update(time, this.camera, this.scene.fog as THREE.Fog);
+    this.renderer.clear();
+    this.renderer.render(this.sky.scene, this.camera);
+    this.renderer.clearDepth();
     this.renderer.render(this.scene, this.camera);
   }
 }
