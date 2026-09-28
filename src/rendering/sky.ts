@@ -12,7 +12,7 @@ export class Sky {
   );
   private moon = new THREE.Group();
   private color = new THREE.Color();
-  private night = new THREE.Color('#283d6f');
+  private night = new THREE.Color('#151f35');
   private day = new THREE.Color('#b8d8de');
   private dusk = new THREE.Color('#db997d');
 

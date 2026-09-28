@@ -1,9 +1,9 @@
 import { SIZE } from '../world/blocks.ts';
 import type { World } from '../world/world.ts';
 import type { Vec } from '../world/raycast.ts';
-export const RADIUS = 0.3,
-  BODY_HEIGHT = 1.8,
-  EYE_HEIGHT = 1.62;
+export const RADIUS = 0.3;
+export const BODY_HEIGHT = 1.8;
+export const EYE_HEIGHT = 1.62;
 
 export function overlaps(position: Vec, block: Vec) {
   return (
@@ -85,6 +85,19 @@ export class Player {
       const start = this.position[axis];
       this.position[axis] += motion[axis];
       if (collides(this.world, this.position)) {
+        if (
+          axis !== 'y' &&
+          Math.abs(motion[axis]) > 0.000001 &&
+          this.position.x - RADIUS >= 0 &&
+          this.position.x + RADIUS <= SIZE &&
+          this.position.z - RADIUS >= 0 &&
+          this.position.z + RADIUS <= SIZE
+        ) {
+          // Pushing against a solid wall climbs vertically, even while airborne.
+          // The normal Y collision pass still blocks ceilings and overhangs.
+          motion.y = 3 * dt;
+          this.verticalSpeed = 0;
+        }
         let lo = 0,
           hi = 1;
         for (let i = 0; i < 14; i++) {
