@@ -9,33 +9,48 @@ export class VoxelLighting {
   sky = new Uint8Array(SIZE * SIZE * HEIGHT);
   block = new Uint8Array(SIZE * SIZE * HEIGHT);
   update(world: World) {
-    const sky = new Uint8Array(this.sky.length), block = new Uint8Array(this.block.length);
-    const skyQueue: number[] = [], blockQueue: number[] = [];
-    for (let x = 0; x < SIZE; x++) for (let z = 0; z < SIZE; z++) {
-      for (let y = HEIGHT - 1; y >= 0 && !world.get(x, y, z); y--) {
-        const index = indexOf(x, y, z);
-        sky[index] = 15;
+    const sky = new Uint8Array(this.sky.length),
+      block = new Uint8Array(this.block.length);
+    const skyQueue: number[] = [],
+      blockQueue: number[] = [];
+    for (let x = 0; x < SIZE; x++)
+      for (let z = 0; z < SIZE; z++) {
+        for (let y = HEIGHT - 1; y >= 0 && !world.get(x, y, z); y--) {
+          const index = indexOf(x, y, z);
+          sky[index] = 15;
+        }
       }
-    }
-    for (let i = 0; i < world.data.length; i++) if (world.data[i] === GLOW_BRICK) {
-      block[i] = 15; blockQueue.push(i);
-    }
+    for (let i = 0; i < world.data.length; i++)
+      if (world.data[i] === GLOW_BRICK) {
+        block[i] = 15;
+        blockQueue.push(i);
+      }
     // Only the edge of direct sunlight needs propagation into shaded air.
-    for (let i = 0; i < sky.length; i++) if (sky[i] === 15) {
-      const x = i % SIZE, z = Math.floor(i / SIZE) % SIZE;
-      if ((x > 0 && !sky[i - 1] && !world.data[i - 1]) ||
+    for (let i = 0; i < sky.length; i++)
+      if (sky[i] === 15) {
+        const x = i % SIZE,
+          z = Math.floor(i / SIZE) % SIZE;
+        if (
+          (x > 0 && !sky[i - 1] && !world.data[i - 1]) ||
           (x < SIZE - 1 && !sky[i + 1] && !world.data[i + 1]) ||
           (z > 0 && !sky[i - SIZE] && !world.data[i - SIZE]) ||
-          (z < SIZE - 1 && !sky[i + SIZE] && !world.data[i + SIZE])) skyQueue.push(i);
-    }
+          (z < SIZE - 1 && !sky[i + SIZE] && !world.data[i + SIZE])
+        )
+          skyQueue.push(i);
+      }
     const spread = (values: Uint8Array, queue: number[]) => {
       for (let head = 0; head < queue.length; head++) {
-        const index = queue[head], level = values[index] - 1;
-        if (level <= 0) continue;
-        const x = index % SIZE, z = Math.floor(index / SIZE) % SIZE;
+        const index = queue[head];
+        const level = values[index] - 1;
+        if (level <= 0) {
+          continue;
+        }
+        const x = index % SIZE;
+        const z = Math.floor(index / SIZE) % SIZE;
         const visit = (next: number) => {
           if (world.data[next] || values[next] >= level) return;
-          values[next] = level; queue.push(next);
+          values[next] = level;
+          queue.push(next);
         };
         if (x > 0) visit(index - 1);
         if (x < SIZE - 1) visit(index + 1);
@@ -45,18 +60,24 @@ export class VoxelLighting {
         if (index < values.length - LAYER) visit(index + LAYER);
       }
     };
-    spread(sky, skyQueue); spread(block, blockQueue);
+    spread(sky, skyQueue);
+    spread(block, blockQueue);
     // Rebuild only chunks with changed lighting, including faces across borders.
     const changedColumns = new Uint8Array(LAYER);
-    for (let i = 0; i < sky.length; i++) if (sky[i] !== this.sky[i] || block[i] !== this.block[i]) changedColumns[i % LAYER] = 1;
-    for (let column = 0; column < LAYER; column++) if (changedColumns[column]) {
-      const x = column % SIZE, z = Math.floor(column / SIZE);
-      for (const dx of [-1, 0, 1]) for (const dz of [-1, 0, 1]) {
-        if (x + dx >= 0 && x + dx < SIZE && z + dz >= 0 && z + dz < SIZE)
-          world.dirty.add(`${Math.floor((x + dx) / CHUNK)},${Math.floor((z + dz) / CHUNK)}`);
+    for (let i = 0; i < sky.length; i++)
+      if (sky[i] !== this.sky[i] || block[i] !== this.block[i]) changedColumns[i % LAYER] = 1;
+    for (let column = 0; column < LAYER; column++)
+      if (changedColumns[column]) {
+        const x = column % SIZE,
+          z = Math.floor(column / SIZE);
+        for (const dx of [-1, 0, 1])
+          for (const dz of [-1, 0, 1]) {
+            if (x + dx >= 0 && x + dx < SIZE && z + dz >= 0 && z + dz < SIZE)
+              world.dirty.add(`${Math.floor((x + dx) / CHUNK)},${Math.floor((z + dz) / CHUNK)}`);
+          }
       }
-    }
-    this.sky = sky; this.block = block;
+    this.sky = sky;
+    this.block = block;
   }
   sample(x: number, y: number, z: number): [number, number] {
     if (x < 0 || z < 0 || y >= HEIGHT || x >= SIZE || z >= SIZE) return [1, 0];
@@ -69,11 +90,14 @@ export class VoxelLighting {
 // Three cells outside a face meet at each vertex: two sides and their corner.
 export function vertexAO(world: World, x: number, y: number, z: number, normal: number[], vertex: number[]) {
   const base = [x + normal[0], y + normal[1], z + normal[2]];
-  const axes = [0, 1, 2].filter(axis => normal[axis] === 0);
-  const a = [...base], b = [...base], corner = [...base];
+  const axes = [0, 1, 2].filter((axis) => normal[axis] === 0);
+  const a = [...base],
+    b = [...base],
+    corner = [...base];
   a[axes[0]] += vertex[axes[0]] ? 1 : -1;
   b[axes[1]] += vertex[axes[1]] ? 1 : -1;
-  corner[axes[0]] = a[axes[0]]; corner[axes[1]] = b[axes[1]];
+  corner[axes[0]] = a[axes[0]];
+  corner[axes[1]] = b[axes[1]];
   const sideA = Number(!!world.get(a[0], a[1], a[2]));
   const sideB = Number(!!world.get(b[0], b[1], b[2]));
   const diagonal = Number(!!world.get(corner[0], corner[1], corner[2]));
