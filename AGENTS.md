@@ -2,6 +2,7 @@
 
 Browser-based first-person voxel sandbox using TypeScript, Three.js, and Vite.
 
+- Use classes instead of exported function when you can.
 - Keep world data independent of Three.js and the DOM. Blocks use integer coordinates; air is block 0.
 - World bounds are finite. Update neighboring chunk meshes when editing a boundary block.
 - Keep input, player physics, rendering, and UI in their respective modules.

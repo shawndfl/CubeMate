@@ -5,6 +5,8 @@ import { Sky } from './sky.ts';
 import { VoxelLighting, vertexAO } from '../world/lighting.ts';
 import { daylight } from '../world/day-cycle.ts';
 import { voxelMaterial } from './voxel-material.ts';
+import { Atlas } from '../world/atlas.ts';
+import { AtlasTexture } from './atlas-texture.ts';
 
 const faces = [
   {
@@ -63,36 +65,6 @@ const faces = [
   },
 ];
 
-function texture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 16;
-  const context = canvas.getContext('2d')!;
-  for (let y = 0; y < 16; y++)
-    for (let x = 0; x < 16; x++) {
-      const value = 205 + ((x * 73 + y * 37 + x * y * 13) % 50);
-      context.fillStyle = `rgb(${value},${value},${value})`;
-      context.fillRect(x, y, 1, 1);
-    }
-  const map = new THREE.CanvasTexture(canvas);
-  map.magFilter = THREE.NearestFilter;
-  map.minFilter = THREE.NearestMipmapLinearFilter;
-  map.colorSpace = THREE.SRGBColorSpace;
-
-  // debug
-  /*
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'cubemate-texture.png';
-    link.click();
-    URL.revokeObjectURL(url);
-  });
-*/
-  return map;
-}
-
 /**
  * Owns CubeMate's Three.js rendering state and converts voxel world data into
  * visible chunk meshes. The game controls the camera transform, target outline,
@@ -113,7 +85,7 @@ export class View {
   private meshes = new Map<string, THREE.Mesh>();
   private lighting = new VoxelLighting();
   private daylight = { value: 1 };
-  private material = voxelMaterial(texture(), this.daylight);
+  private material = voxelMaterial(AtlasTexture.load(), this.daylight);
 
   /** Wireframe shown around the solid block currently under the crosshair. */
   readonly outline = new THREE.LineSegments(
@@ -174,10 +146,7 @@ export class View {
             for (const face of faces) {
               if (world.get(x + face.n[0], y + face.n[1], z + face.n[2])) continue;
               const offset = positions.length / 3;
-              const color = new THREE.Color(BLOCKS[block].color);
-              if (block === 1 && face.n[1] !== 1) {
-                color.set(face.n[1] === -1 ? '#9c7653' : '#7f8751');
-              }
+              const color = new THREE.Color(BLOCKS[block].tint);
               color.multiplyScalar(0.94 + ((x * 13 + y * 7 + z * 3) % 9) * 0.009);
               const glowing = block === GLOW_BRICK;
               const shade = face.n[1] > 0 ? 1 : face.n[1] < 0 ? 0.5 : face.n[0] ? 0.72 : 0.86;
@@ -191,7 +160,7 @@ export class View {
                 colors.push(color.r * brightness, color.g * brightness, color.b * brightness);
                 lights.push(light[0], light[1], glowing ? 1 : 0);
               }
-              uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
+              uvs.push(...Atlas.uvs(Atlas.face(BLOCKS[block].textures, face.n[1])));
               if (ao[0] + ao[2] > ao[1] + ao[3])
                 indices.push(offset, offset + 1, offset + 3, offset + 1, offset + 2, offset + 3);
               else indices.push(offset, offset + 1, offset + 2, offset, offset + 2, offset + 3);

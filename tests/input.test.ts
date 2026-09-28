@@ -35,9 +35,24 @@ test('held mouse buttons repeat every 200 ms and stop on release or lost focus',
     assert.deepEqual(actions, [0, 0]);
     mouse('mousedown', 2);
     assert.deepEqual(actions, [0, 0, 2]);
+    // Entering a menu must stop held actions before pointer-lock loss arrives.
+    doc.pointerLockElement = canvas;
+    doc.dispatchEvent(new Event('pointerlockchange'));
+    mouse('mousedown', 0);
+    input.keys.add('KeyW');
+    input.enabled = false;
+    input.reset();
+    assert.equal(input.keys.size, 0);
+    t.mock.timers.tick(1000);
+    mouse('mousedown', 2);
+    assert.deepEqual(actions, [0, 0, 2, 0]);
+    input.enabled = true;
+    t.mock.timers.tick(1000);
+    assert.deepEqual(actions, [0, 0, 2, 0]);
+    mouse('mousedown', 2);
     win.dispatchEvent(new Event('blur'));
     t.mock.timers.tick(1000);
-    assert.deepEqual(actions, [0, 0, 2]);
+    assert.deepEqual(actions, [0, 0, 2, 0, 2]);
   } finally {
     win.dispatchEvent(new Event('blur'));
     if (previousDocument) Object.defineProperty(globalThis, 'document', previousDocument);

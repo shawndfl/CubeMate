@@ -4,6 +4,8 @@ export class Input {
   private readonly repeatTimers = new Map<number, ReturnType<typeof setInterval>>();
   readonly keys = new Set<string>();
   locked = false;
+  enabled = true;
+  onBlur = () => {};
   onLock = (_locked: boolean) => {};
   onLook = (_x: number, _y: number) => {};
   onSelect = (_slot: number) => {};
@@ -17,19 +19,18 @@ export class Input {
     // setups the first person interaction
     document.addEventListener('pointerlockchange', () => {
       this.locked = document.pointerLockElement === canvas;
-      this.keys.clear();
-      if (!this.locked) this.stopActions();
+      this.reset();
       this.onLock(this.locked);
     });
     window.addEventListener('blur', () => {
-      this.keys.clear();
-      this.stopActions();
+      this.reset();
+      this.onBlur();
       if (this.locked) document.exitPointerLock();
     });
 
     // keyboard events
     document.addEventListener('keydown', (e) => {
-      if (!this.locked) return;
+      if (!this.locked || !this.enabled) return;
       if (['Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyC', 'KeyF', 'ShiftLeft', 'ShiftRight'].includes(e.code))
         e.preventDefault();
       this.keys.add(e.code);
@@ -41,15 +42,15 @@ export class Input {
 
     // mouse events
     document.addEventListener('mousemove', (e) => {
-      if (this.locked) this.onLook(e.movementX, e.movementY);
+      if (this.locked && this.enabled) this.onLook(e.movementX, e.movementY);
     });
     canvas.addEventListener('mousedown', (e) => {
-      if (!this.locked || (e.button !== 0 && e.button !== 2) || this.repeatTimers.has(e.button)) return;
+      if (!this.locked || !this.enabled || (e.button !== 0 && e.button !== 2) || this.repeatTimers.has(e.button)) return;
       this.onAction(e.button);
       this.repeatTimers.set(
         e.button,
         setInterval(() => {
-          if (this.locked) this.onAction(e.button);
+          if (this.locked && this.enabled) this.onAction(e.button);
         }, 200),
       );
     });
@@ -59,6 +60,10 @@ export class Input {
   }
   async lock() {
     await this.canvas.requestPointerLock();
+  }
+  reset() {
+    this.keys.clear();
+    this.stopActions();
   }
   private stopAction(button: number) {
     const timer = this.repeatTimers.get(button);
