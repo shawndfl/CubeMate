@@ -1,13 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { World } from '../src/world/world.ts';
-import { Player, collides } from '../src/player/physics.ts';
+import { Player, collides, CLIMB_MIN_PITCH } from '../src/player/physics.ts';
 
 function setup() {
   const world = new World(); world.data.fill(0);
   for (let x = 40; x < 55; x++) for (let z = 40; z < 55; z++) world.set(x, 10, z, 3);
   const player = new Player(world);
   player.position = { x: 48.5, y: 11, z: 48.5 }; player.yaw = 0;
+  player.pitch = CLIMB_MIN_PITCH;
   player.update(1 / 120, new Set());
   return { world, player };
 }
@@ -54,4 +55,41 @@ test('the invisible world boundary is not climbable', () => {
   player.position = { x: 0.31, y: 15, z: 48.5 };
   player.update(1 / 120, new Set(['KeyA']));
   assert.ok(player.position.y < 15);
+});
+
+test('forward movement does not climb when looking level, down, or below the threshold', () => {
+  for (const pitch of [0, -0.3, CLIMB_MIN_PITCH - 0.001]) {
+    const fixture = setup();
+    const player = fixture.player;
+    fixture.world.set(48, 11, 47, 3);
+    player.position.z = 48.31;
+    player.pitch = pitch;
+    for (let i = 0; i < 60; i++) player.update(1 / 120, new Set(['KeyW']));
+    assert.ok(Math.abs(player.position.y - 11) < 0.001);
+  }
+});
+
+test('backward or sideways contact does not climb, even while looking up', () => {
+  for (const keys of [['KeyS'], ['KeyD'], ['KeyW', 'KeyD'], ['KeyW', 'KeyS', 'KeyD']]) {
+    const fixture = setup();
+    const player = fixture.player;
+    player.position = { x: 48.69, y: 11.3, z: 48.69 };
+    player.grounded = false;
+    fixture.world.set(49, 11, 48, 3);
+    fixture.world.set(48, 11, 49, 3);
+    player.update(1 / 120, new Set(keys));
+    assert.ok(player.position.y < 11.3);
+  }
+});
+
+test('lowering the view stops an active climb', () => {
+  const fixture = setup();
+  const player = fixture.player;
+  fixture.world.set(48, 11, 47, 3);
+  player.position = { x: 48.5, y: 11.3, z: 48.31 };
+  player.update(1 / 120, new Set(['KeyW']));
+  const height = player.position.y;
+  player.pitch = 0;
+  player.update(1 / 120, new Set(['KeyW']));
+  assert.ok(player.position.y < height);
 });

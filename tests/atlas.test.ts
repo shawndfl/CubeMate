@@ -5,6 +5,8 @@ import { BLOCKS, GLOW_BRICK } from '../src/world/blocks.ts';
 import { World } from '../src/world/world.ts';
 import { Player } from '../src/player/physics.ts';
 import { serialize, restore } from '../src/game/save.ts';
+import { Texture } from 'three';
+import { voxelMaterial } from '../src/rendering/voxel-material.ts';
 
 test('atlas UVs flip the image Y axis and stay inside the selected rectangle', () => {
   const rect = { x: 32, y: 64, width: 16, height: 32 };
@@ -48,4 +50,12 @@ test('world saves remain independent of atlas appearance', () => {
   assert.equal(restore(raw, fresh, new Player(fresh)), 6);
   assert.equal(fresh.get(20, 30, 20), GLOW_BRICK);
   assert.equal(raw.includes('textures'), false);
+});
+
+test('voxel atlas material cuts out alpha without enabling blending', () => {
+  const material = voxelMaterial(new Texture(), { value: 1 });
+  assert.equal(material.alphaTest, 0.5);
+  assert.equal(material.transparent, false);
+  assert.equal(material.depthWrite, true);
+  material.dispose();
 });

@@ -4,6 +4,7 @@ import type { Vec } from '../world/raycast.ts';
 export const RADIUS = 0.3;
 export const BODY_HEIGHT = 1.8;
 export const EYE_HEIGHT = 1.62;
+export const CLIMB_MIN_PITCH = Math.PI / 18; // Ten degrees above level.
 
 export function overlaps(position: Vec, block: Vec) {
   return (
@@ -87,19 +88,22 @@ export class Player {
       if (collides(this.world, this.position)) {
         if (
           axis !== 'y' &&
+          forward > 0 &&
+          this.pitch >= CLIMB_MIN_PITCH &&
+          motion[axis] * (axis === 'x' ? -Math.sin(this.yaw) : -Math.cos(this.yaw)) > 0.000001 &&
           Math.abs(motion[axis]) > 0.000001 &&
           this.position.x - RADIUS >= 0 &&
           this.position.x + RADIUS <= SIZE &&
           this.position.z - RADIUS >= 0 &&
           this.position.z + RADIUS <= SIZE
         ) {
-          // Pushing against a solid wall climbs vertically, even while airborne.
+          // Climb only when walking toward the wall and looking upward.
           // The normal Y collision pass still blocks ceilings and overhangs.
           motion.y = 3 * dt;
           this.verticalSpeed = 0;
         }
-        let lo = 0,
-          hi = 1;
+        let lo = 0;
+        let hi = 1;
         for (let i = 0; i < 14; i++) {
           const mid = (lo + hi) / 2;
           this.position[axis] = start + motion[axis] * mid;

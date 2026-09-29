@@ -1,4 +1,4 @@
-import { CHUNK, GLOW_BRICK, HEIGHT, SIZE } from './blocks.ts';
+import { BLOCKS, CHUNK, GLOW_BRICK, HEIGHT, SIZE } from './blocks.ts';
 import type { World } from './world.ts';
 
 const indexOf = (x: number, y: number, z: number) => x + SIZE * (z + SIZE * y);
@@ -15,7 +15,7 @@ export class VoxelLighting {
       blockQueue: number[] = [];
     for (let x = 0; x < SIZE; x++)
       for (let z = 0; z < SIZE; z++) {
-        for (let y = HEIGHT - 1; y >= 0 && !world.get(x, y, z); y--) {
+        for (let y = HEIGHT - 1; y >= 0 && !this.occludes(world.get(x, y, z)); y--) {
           const index = indexOf(x, y, z);
           sky[index] = 15;
         }
@@ -31,10 +31,10 @@ export class VoxelLighting {
         const x = i % SIZE,
           z = Math.floor(i / SIZE) % SIZE;
         if (
-          (x > 0 && !sky[i - 1] && !world.data[i - 1]) ||
-          (x < SIZE - 1 && !sky[i + 1] && !world.data[i + 1]) ||
-          (z > 0 && !sky[i - SIZE] && !world.data[i - SIZE]) ||
-          (z < SIZE - 1 && !sky[i + SIZE] && !world.data[i + SIZE])
+          (x > 0 && !sky[i - 1] && !this.occludes(world.data[i - 1])) ||
+          (x < SIZE - 1 && !sky[i + 1] && !this.occludes(world.data[i + 1])) ||
+          (z > 0 && !sky[i - SIZE] && !this.occludes(world.data[i - SIZE])) ||
+          (z < SIZE - 1 && !sky[i + SIZE] && !this.occludes(world.data[i + SIZE]))
         )
           skyQueue.push(i);
       }
@@ -48,7 +48,7 @@ export class VoxelLighting {
         const x = index % SIZE;
         const z = Math.floor(index / SIZE) % SIZE;
         const visit = (next: number) => {
-          if (world.data[next] || values[next] >= level) return;
+          if (this.occludes(world.data[next]) || values[next] >= level) return;
           values[next] = level;
           queue.push(next);
         };
@@ -85,6 +85,7 @@ export class VoxelLighting {
     const i = indexOf(x, y, z);
     return [this.sky[i] / 15, this.block[i] / 15];
   }
+  private occludes(block: number) { return block !== 0 && BLOCKS[block].occludes !== false; }
 }
 
 // Three cells outside a face meet at each vertex: two sides and their corner.
@@ -98,9 +99,11 @@ export function vertexAO(world: World, x: number, y: number, z: number, normal: 
   b[axes[1]] += vertex[axes[1]] ? 1 : -1;
   corner[axes[0]] = a[axes[0]];
   corner[axes[1]] = b[axes[1]];
-  const sideA = Number(!!world.get(a[0], a[1], a[2]));
-  const sideB = Number(!!world.get(b[0], b[1], b[2]));
-  const diagonal = Number(!!world.get(corner[0], corner[1], corner[2]));
+  const sideA = Number(occludes(world.get(a[0], a[1], a[2])));
+  const sideB = Number(occludes(world.get(b[0], b[1], b[2])));
+  const diagonal = Number(occludes(world.get(corner[0], corner[1], corner[2])));
   const level = sideA && sideB ? 0 : 3 - sideA - sideB - diagonal;
   return [0.45, 0.65, 0.82, 1][level];
 }
+
+function occludes(block: number) { return block !== 0 && BLOCKS[block].occludes !== false; }

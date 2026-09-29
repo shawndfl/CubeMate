@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { World } from '../src/world/world.ts';
-import { GLOW_BRICK } from '../src/world/blocks.ts';
+import { BLOCKS, GLOW_BRICK } from '../src/world/blocks.ts';
 import { VoxelLighting, vertexAO } from '../src/world/lighting.ts';
 import { Player } from '../src/player/physics.ts';
 import { serialize, restore } from '../src/game/save.ts';
@@ -34,6 +34,19 @@ test('glow spreads across chunks, is blocked by a sealed room, and disappears on
   world.dirty.clear(); world.set(15, 30, 15, 0); light.update(world);
   assert.equal(light.sample(16, 30, 15)[1], 0);
   assert.equal(world.dirty.has('1,0'), true);
+});
+
+test('leaf cutouts transmit skylight and do not add ambient occlusion', () => {
+  const world = new World(); world.data.fill(0);
+  world.set(20, 20, 20, 6);
+  world.set(21, 20, 20, 6);
+  world.set(22, 20, 20, 3);
+  assert.equal(BLOCKS[world.get(20, 20, 20)].occludes, false);
+  assert.equal(BLOCKS[world.get(22, 20, 20)].occludes, true);
+  const lighting = new VoxelLighting();
+  lighting.update(world);
+  assert.equal(lighting.sample(20, 20, 20)[0], 1);
+  assert.equal(vertexAO(world, 20, 19, 20, [0, 1, 0], [1, 1, 1]), 1);
 });
 
 test('glow bricks and their selected hotbar slot survive autosave', () => {

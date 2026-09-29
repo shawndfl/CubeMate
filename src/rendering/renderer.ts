@@ -144,7 +144,8 @@ export class View {
             const block = world.get(x, y, z);
             if (!block) continue;
             for (const face of faces) {
-              if (world.get(x + face.n[0], y + face.n[1], z + face.n[2])) continue;
+              const neighbor = world.get(x + face.n[0], y + face.n[1], z + face.n[2]);
+              if (neighbor && BLOCKS[neighbor].occludes !== false) continue;
               const offset = positions.length / 3;
               const color = new THREE.Color(BLOCKS[block].tint);
               color.multiplyScalar(0.94 + ((x * 13 + y * 7 + z * 3) % 9) * 0.009);

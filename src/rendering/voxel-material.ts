@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 
 export function voxelMaterial(map: THREE.Texture, daylight: { value: number }) {
-  const material = new THREE.MeshBasicMaterial({ vertexColors: true, map });
+  const material = new THREE.MeshBasicMaterial({
+    vertexColors: true,
+    map,
+    alphaTest: 0.5,
+    transparent: false,
+    depthWrite: true,
+  });
   material.onBeforeCompile = shader => {
     shader.uniforms.daylight = daylight;
     shader.vertexShader = 'attribute vec3 voxelLight; varying vec3 vVoxelLight;\n' + shader.vertexShader;
