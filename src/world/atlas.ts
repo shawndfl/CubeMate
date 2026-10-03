@@ -3,7 +3,7 @@ export type FaceTextures = { top: TextureRect; bottom: TextureRect; side: Textur
 
 /** Pixel rectangles use the image's top-left origin; UVs use a bottom-left origin. */
 export class Atlas {
-  static readonly url = '/atlas.png';
+  static readonly url = './atlas.png';
   static readonly width = 1024;
   static readonly height = 1024;
   static tile(x: number, y: number): TextureRect { return { x, y, width: 16, height: 16 }; }

@@ -51,7 +51,7 @@ export class Game {
     ui.onMainMenu = () => states.mainMenu();
     ui.onBack = () => states.back();
     ui.onAtlasPicker = () => {
-      const picker = window.open('/atlas-picker.html', 'cubemate-atlas-picker', 'popup,width=1120,height=850,resizable=yes,scrollbars=yes');
+      const picker = window.open('./atlas-picker.html', 'cubemate-atlas-picker', 'popup,width=1120,height=850,resizable=yes,scrollbars=yes');
       if (!picker) ui.settingsStatus('The picker window was blocked. Allow popups for this site and retry.');
     };
     ui.onSensitivity = value => {

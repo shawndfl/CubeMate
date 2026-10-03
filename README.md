@@ -31,6 +31,8 @@ npm run build
 npm run preview
 ```
 
+For GitHub Pages, `npm run build` writes the production site to `docs/`, including `.nojekyll`. Commit and push `docs/` along with source changes after rebuilding. In the repository's **Settings → Pages**, choose **Deploy from a branch**, select your publishing branch and **/docs**, then save. Relative asset paths support hosting under `/CubeMate/`. The hosted atlas editor supports copying definitions; direct saves require the local development server. Keep `docs/` dedicated to generated site files because each build replaces its contents.
+
 ## Structure
 
 ### Atlas textures and new blocks
