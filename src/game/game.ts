@@ -92,25 +92,35 @@ export class Game {
         !overlaps(player.position, hit.adjacent) &&
         !world.get(hit.adjacent.x, hit.adjacent.y, hit.adjacent.z)
       )
-        changed = world.set(hit.adjacent.x, hit.adjacent.y, hit.adjacent.z, ui.selected + 1);
+        changed = world.set(hit.adjacent.x, hit.adjacent.y, hit.adjacent.z, ui.selectedBlock);
       if (changed) autosave.schedule();
     };
     window.addEventListener('pagehide', () => { states.pause(); autosave.flush(); });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { states.pause(); autosave.flush(); } });
     document.addEventListener('keydown', event => {
+      if (event.code === 'Tab' && states.playing) {
+        event.preventDefault();
+        if (!event.repeat) states.blocks();
+        return;
+      }
+      if (states.state === 'blocks') return;
       if (event.code !== 'Escape') return;
       if (states.state === 'settings') states.back();
       else states.pause();
     });
-    ui.start.addEventListener('click', () => {
+    const resume = () => {
       if (!states.requestPlay()) return;
       input.lock().catch(() => {
         states.cancelPlay();
-        ui.error('Mouse capture was blocked. Click Continue or Resume to retry.');
+        if (states.state === 'blocks') ui.picker.error('Mouse capture was blocked. Click Done to retry.');
+        else ui.error('Mouse capture was blocked. Click Continue or Resume to retry.');
       });
-    });
+    };
+    ui.start.addEventListener('click', resume);
+    ui.picker.onClose = resume;
     document.addEventListener('pointerlockerror', () => {
       states.cancelPlay();
+      if (states.state === 'blocks') ui.picker.error('Mouse capture was blocked. Click Done to retry.');
       ui.error('Mouse capture was blocked. Click Continue or Resume to retry.');
     });
     view.renderer.domElement.addEventListener('webglcontextlost', (e) => {

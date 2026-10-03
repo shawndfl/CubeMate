@@ -1,7 +1,11 @@
 import { BLOCKS } from '../world/blocks.ts';
 import type { GameState } from '../game/state.ts';
 import { Atlas } from '../world/atlas.ts';
+import { Hotbar } from '../game/hotbar.ts';
+import { BlockPicker } from './block-picker.ts';
 export class UI {
+  readonly hotbar = new Hotbar();
+  readonly picker: BlockPicker;
   private panel: HTMLElement;
   private status: HTMLElement;
   private slots: HTMLButtonElement[];
@@ -37,7 +41,7 @@ export class UI {
         <div class="instructions"><span><kbd>W A S D</kbd> Move</span><span><kbd>MOUSE</kbd> Look</span><span><kbd>SPACE</kbd> Jump</span><span><kbd>SHIFT</kbd> Run</span><span><kbd>F</kbd> Inspect</span></div>
         <div class="notice" role="status">Desktop · keyboard & mouse · saves automatically in this browser</div>
       </section>
-      <footer class="hud"><div class="selected-name">Grass</div><div class="hotbar" aria-label="Block palette"></div><div class="hints"><span>LEFT CLICK <b>Break</b></span><span>RIGHT CLICK <b>Place</b></span><span>1–${BLOCKS.length - 1} <b>Select</b></span><span>F <b>Inspect</b></span><span>ESC <b>Pause</b></span></div></footer>
+      <footer class="hud"><div class="selected-name">Grass</div><div class="hotbar" aria-label="Block palette"></div><div class="hints"><span>LEFT CLICK <b>Break</b></span><span>RIGHT CLICK <b>Place</b></span><span>1–${this.hotbar.blocks.length} <b>Select</b></span><span>TAB <b>Blocks</b></span><span>F <b>Inspect</b></span><span>ESC <b>Pause</b></span></div></footer>
       <div class="inspect-status" aria-live="polite" hidden>INSPECT MODE <span>WASD Fly · SPACE Up · C Down · SHIFT Boost · F Exit</span></div>
       <div class="coordinates">EXPLORING THE WILDS</div><div class="version">CREATIVE PROTOTYPE <span>v0.1</span></div>
       <div class="save-status" role="status">AUTOSAVE ON</div>
@@ -54,7 +58,9 @@ export class UI {
       this.onSensitivity(value);
     });
     const bar = root.querySelector('.hotbar')!;
-    this.slots = BLOCKS.slice(1).map((block, index) => {
+    try { this.hotbar.restore(localStorage.getItem('cubemate.hotbar.v1')); } catch { /* Use defaults. */ }
+    this.slots = this.hotbar.blocks.map((id, index) => {
+      const block = BLOCKS[id];
       const button = document.createElement('button');
       button.className = 'slot'; button.title = `${index + 1}: ${block.name}`; button.setAttribute('aria-label', block.name);
       button.innerHTML = `<span class="slot-number">${index + 1}</span><span class="block-icon" style="--block:${block.color}"></span>`;
@@ -65,17 +71,33 @@ export class UI {
       icon.style.backgroundPosition = `${-rect.x * 25 / rect.width}px ${-rect.y * 27 / rect.height}px`;
       button.addEventListener('click', () => this.select(index)); bar.append(button); return button;
     });
+    this.picker = new BlockPicker(root, this.hotbar);
+    this.picker.onChange = () => {
+      this.slots.forEach((button, index) => {
+        const id = this.hotbar.blocks[index];
+        button.querySelector('.block-icon')!.replaceWith(BlockPicker.icon(id));
+        button.title = `${index + 1}: ${BLOCKS[id].name}`;
+        button.setAttribute('aria-label', button.title);
+      });
+      this.select(this.selected);
+      try { localStorage.setItem('cubemate.hotbar.v1', JSON.stringify(this.hotbar.blocks)); }
+      catch { this.picker.error('Hotbar updated, but could not save it in this browser.'); }
+    };
     this.select(0);
   }
+  get selectedBlock() { return this.hotbar.blocks[this.selected]; }
   select(index: number) {
+    if (!Number.isInteger(index) || index < 0 || index >= this.slots.length) index = 0;
     this.selected = index;
     this.slots.forEach((slot, i) => { slot.classList.toggle('active', index === i); slot.setAttribute('aria-pressed', String(index === i)); });
-    document.querySelector('.selected-name')!.textContent = BLOCKS[index + 1].name;
+    document.querySelector('.selected-name')!.textContent = BLOCKS[this.selectedBlock].name;
   }
   setState(state: GameState) {
     const playing = state === 'playing';
     const settings = state === 'settings';
-    this.panel.hidden = playing;
+    this.panel.hidden = playing || state === 'blocks';
+    if (state === 'blocks') this.picker.show(this.selected);
+    else this.picker.hide();
     document.body.classList.toggle('playing', playing);
     this.panel.querySelector<HTMLElement>('.menu-actions')!.hidden = settings;
     this.panel.querySelector<HTMLElement>('.settings-panel')!.hidden = !settings;
@@ -84,7 +106,7 @@ export class UI {
     this.panel.querySelector('#title')!.innerHTML = settings ? 'Settings' : state === 'paused' ? 'Take a<br><em>breather.</em>' : 'Make room<br>for <em>imagination.</em>';
     this.panel.querySelector('p')!.textContent = settings ? 'Make the controls feel right for you.' : state === 'paused' ? 'Your world is paused. Pick up where you left off.' : 'Find your corner of the wilderness. Break a block. Build something new.';
     this.start.textContent = state === 'paused' ? 'Resume' : 'Continue';
-    if (!playing) {
+    if (!playing && state !== 'blocks') {
       const focus = settings ? this.panel.querySelector<HTMLInputElement>('#sensitivity')! : this.start;
       focus.focus();
     }

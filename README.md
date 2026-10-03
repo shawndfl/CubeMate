@@ -1,4 +1,4 @@
-﻿# CubeMate
+# CubeMate
 
 A small first-person voxel sandbox built with TypeScript, Three.js, and Vite. Original procedural block textures, seeded hills and trees, a seven-block palette, chunk meshes, and fixed-step player physics.
 
@@ -88,3 +88,5 @@ Automated tests cover state transitions, failed/cancelled pointer capture, input
 5. Switch tabs or focus another window while playing. Returning should show the pause menu. Denied pointer capture should leave the menu visible with a retry message.
 6. Check menus using keyboard navigation and on a short browser window; verify wall climbing, building, inspect mode, and glow lighting still work after resuming.
 
+
+Press **Tab** during play to open the block picker and release the cursor. Select one of the nine hotbar slots, then choose a block from the grid. Choosing an already active block swaps its slot with the target slot. Click **Done** to recapture the mouse and resume. The hotbar layout is saved in this browser; number keys **1–9** select its slots.

@@ -1,4 +1,4 @@
-export type GameState = 'main' | 'playing' | 'paused' | 'settings';
+export type GameState = 'main' | 'playing' | 'paused' | 'settings' | 'blocks';
 
 type Effects = {
   resetInput: () => void;
@@ -19,7 +19,7 @@ export class GameStates {
   get playing() { return this.current === 'playing'; }
 
   requestPlay() {
-    if (this.pendingPlay || (this.current !== 'main' && this.current !== 'paused')) return false;
+    if (this.pendingPlay || (this.current !== 'main' && this.current !== 'paused' && this.current !== 'blocks')) return false;
     this.pendingPlay = true;
     return true;
   }
@@ -27,7 +27,7 @@ export class GameStates {
   pointerChanged(locked: boolean) {
     if (locked) {
       if (this.playing) return;
-      if (this.pendingPlay && (this.current === 'main' || this.current === 'paused')) {
+      if (this.pendingPlay && (this.current === 'main' || this.current === 'paused' || this.current === 'blocks')) {
         this.pendingPlay = false;
         this.transition('playing');
       } else this.effects.releasePointer();
@@ -38,6 +38,7 @@ export class GameStates {
     this.transition(this.playing ? 'paused' : this.current);
   }
   mainMenu() { this.transition('main'); }
+  blocks() { if (this.playing) this.transition('blocks'); }
   settings() {
     if (this.current === 'settings') return;
     this.settingsOrigin = this.current === 'main' ? 'main' : 'paused';
