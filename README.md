@@ -39,7 +39,11 @@ World faces and hotbar icons use `public/atlas.png`. The image is 1024 × 1024 p
 
 Open **Settings → Open atlas picker** to launch the atlas in a separate window. Click a tile to select a 16 × 16 rectangle. Zoom and scroll to inspect small tiles, or type x, y, width, and height for larger/non-grid rectangles. Use **Copy x, y** for a concise pair such as `416, 80`, or **Copy full rectangle** for all four values. The preview and coordinates update immediately. Selecting a tile only inspects it; it does not edit your world or block definitions.
 
-In `src/world/blocks.ts`, append a new entry to `BLOCKS`:
+The picker also loads `BLOCKS` into a block editor. Select an existing block or click **Add block**, then edit its name, color, and occlusion. Select an atlas rectangle and use **Use selected rectangle** to assign it to the top, bottom, sides, or all faces. Click a face preview to inspect its current rectangle. Color controls the hotbar fallback; existing tint, light, and animation properties are preserved (animated blocks still render their animation frames).
+
+With `npm run dev`, **Save to blocks.ts** writes the definitions directly to `src/world/blocks.ts`; the game reloads to use them. The editor rejects saves if that file changed after the picker loaded. **Copy BLOCKS** exports the declaration for manual use, including on production builds where direct saving is disabled. New blocks append to the array to preserve saved IDs; Air is read-only. Unsaved edits stay in the picker window.
+
+Alternatively, in `src/world/blocks.ts`, append a new entry to `BLOCKS`:
 
 ```ts
 {
