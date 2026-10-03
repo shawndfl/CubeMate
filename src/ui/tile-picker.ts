@@ -8,9 +8,9 @@ export class TilePicker {
   constructor(root: HTMLElement) {
     this.root = root;
     root.innerHTML = `
-      <summary>Atlas tile picker</summary>
+      <h1>Atlas tile picker</h1>
       <p>Click a 16 × 16 tile, or enter a custom pixel rectangle. Origin is the image's top-left.</p>
-      <label>Zoom <select class="atlas-zoom"><option value="0.5">50%</option><option value="1" selected>100%</option><option value="2">200%</option></select></label>
+      <div class="atlas-toolbar"><label>Zoom <select class="atlas-zoom"><option value="0.5">50%</option><option value="1" selected>100%</option><option value="2">200%</option></select></label><span>Tile selection snaps to 16 pixels.</span></div>
       <div class="atlas-scroll"><div class="atlas-sheet">
         <img src="${Atlas.url}" alt="Block texture atlas" draggable="false" />
         <div class="atlas-selection"></div>
@@ -19,8 +19,12 @@ export class TilePicker {
         ${['x', 'y', 'width', 'height'].map(field => `<label>${field}<input data-field="${field}" type="number" step="1" min="${field === 'x' || field === 'y' ? 0 : 1}" max="1024" value="${field === 'x' || field === 'y' ? 0 : 16}" /></label>`).join('')}
       </div>
       <div class="atlas-preview" aria-label="Selected tile preview"></div>
+      <div class="atlas-coordinates" aria-live="polite"></div>
+      <div class="atlas-copy-buttons">
+        <button class="atlas-copy-xy" type="button">Copy x, y</button>
+        <button class="atlas-copy-rect" type="button">Copy full rectangle</button>
+      </div>
       <textarea class="atlas-code" aria-label="Texture rectangle definition" readonly rows="2"></textarea>
-      <button class="menu-button atlas-copy" type="button">Copy rectangle</button>
       <div class="atlas-message" role="status"></div>
     `;
     const img = root.querySelector('img')!;
@@ -47,14 +51,20 @@ export class TilePicker {
       this.rect = candidate;
       this.sync();
     }));
-    root.querySelector('.atlas-copy')!.addEventListener('click', async () => {
-      const code = root.querySelector<HTMLTextAreaElement>('.atlas-code')!;
-      try { await navigator.clipboard.writeText(code.value); this.message('Rectangle copied.'); }
-      catch { code.focus(); code.select(); this.message('Press Ctrl+C or Command+C to copy the selected text.'); }
-    });
+    root.querySelector('.atlas-copy-xy')!.addEventListener('click', () => this.copy(`${this.rect.x}, ${this.rect.y}`, 'Coordinates copied.'));
+    root.querySelector('.atlas-copy-rect')!.addEventListener('click', () => this.copy(this.rectangleCode(), 'Rectangle copied.'));
     this.sync();
   }
   private message(text: string) { this.root.querySelector('.atlas-message')!.textContent = text; }
+  private rectangleCode() {
+    return `{ x: ${this.rect.x}, y: ${this.rect.y}, width: ${this.rect.width}, height: ${this.rect.height} }`;
+  }
+  private async copy(text: string, success: string) {
+    const code = this.root.querySelector<HTMLTextAreaElement>('.atlas-code')!;
+    code.value = text;
+    try { await navigator.clipboard.writeText(text); this.message(success); }
+    catch { code.focus(); code.select(); this.message('Press Ctrl+C or Command+C to copy the selected text.'); }
+  }
   private sync() {
     const sheet = this.root.querySelector<HTMLElement>('.atlas-sheet')!;
     sheet.style.width = `${Atlas.width * this.zoom}px`;
@@ -73,7 +83,8 @@ export class TilePicker {
     preview.style.height = `${this.rect.height * scale}px`;
     preview.style.backgroundSize = `${Atlas.width * scale}px ${Atlas.height * scale}px`;
     preview.style.backgroundPosition = `${-this.rect.x * scale}px ${-this.rect.y * scale}px`;
-    this.root.querySelector<HTMLTextAreaElement>('.atlas-code')!.value = `{ x: ${this.rect.x}, y: ${this.rect.y}, width: ${this.rect.width}, height: ${this.rect.height} }`;
+    this.root.querySelector('.atlas-coordinates')!.textContent = `x: ${this.rect.x}, y: ${this.rect.y}`;
+    this.root.querySelector<HTMLTextAreaElement>('.atlas-code')!.value = this.rectangleCode();
     this.message('');
   }
 }

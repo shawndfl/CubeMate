@@ -1,6 +1,5 @@
 import { BLOCKS } from '../world/blocks.ts';
 import type { GameState } from '../game/state.ts';
-import { TilePicker } from './tile-picker.ts';
 import { Atlas } from '../world/atlas.ts';
 export class UI {
   private panel: HTMLElement;
@@ -11,6 +10,7 @@ export class UI {
   onSettings = () => {};
   onMainMenu = () => {};
   onBack = () => {};
+  onAtlasPicker = () => {};
   onSensitivity = (_value: number) => {};
   constructor(root: HTMLElement) {
     root.insertAdjacentHTML('beforeend', `
@@ -31,7 +31,7 @@ export class UI {
           <input id="sensitivity" type="range" min="0.1" max="3" step="0.1" value="1" aria-describedby="sensitivity-help" />
           <p id="sensitivity-help">Lower values turn more slowly. 1.0× is the default.</p>
           <div class="settings-message" role="status">Changes save automatically.</div>
-          <details class="tile-picker"></details>
+          <button class="menu-button atlas-picker-button" type="button">Open atlas picker</button>
           <button class="menu-button back-button">Back</button>
         </div>
         <div class="instructions"><span><kbd>W A S D</kbd> Move</span><span><kbd>MOUSE</kbd> Look</span><span><kbd>SPACE</kbd> Jump</span><span><kbd>SHIFT</kbd> Run</span><span><kbd>F</kbd> Inspect</span></div>
@@ -44,10 +44,10 @@ export class UI {
     `);
     this.panel = root.querySelector('.panel')!; this.start = root.querySelector('.start')!;
     this.status = root.querySelector('.notice')!;
-    new TilePicker(root.querySelector('.tile-picker')!);
     root.querySelector('.settings-button')!.addEventListener('click', () => this.onSettings());
     root.querySelector('.main-menu-button')!.addEventListener('click', () => this.onMainMenu());
     root.querySelector('.back-button')!.addEventListener('click', () => this.onBack());
+    root.querySelector('.atlas-picker-button')!.addEventListener('click', () => this.onAtlasPicker());
     root.querySelector<HTMLInputElement>('#sensitivity')!.addEventListener('input', event => {
       const value = Number((event.target as HTMLInputElement).value);
       this.setSensitivity(value);

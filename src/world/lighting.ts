@@ -1,4 +1,4 @@
-import { BLOCKS, CHUNK, GLOW_BRICK, HEIGHT, SIZE } from './blocks.ts';
+import { BLOCKS, CHUNK, HEIGHT, SIZE } from './blocks.ts';
 import type { World } from './world.ts';
 
 const indexOf = (x: number, y: number, z: number) => x + SIZE * (z + SIZE * y);
@@ -20,11 +20,13 @@ export class VoxelLighting {
           sky[index] = 15;
         }
       }
-    for (let i = 0; i < world.data.length; i++)
-      if (world.data[i] === GLOW_BRICK) {
-        block[i] = 15;
+    for (let i = 0; i < world.data.length; i++) {
+      const emittedLight = BLOCKS[world.data[i]].light;
+      if (emittedLight) {
+        block[i] = emittedLight;
         blockQueue.push(i);
       }
+    }
     // Only the edge of direct sunlight needs propagation into shaded air.
     for (let i = 0; i < sky.length; i++)
       if (sky[i] === 15) {

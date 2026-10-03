@@ -36,6 +36,18 @@ test('glow spreads across chunks, is blocked by a sealed room, and disappears on
   assert.equal(world.dirty.has('1,0'), true);
 });
 
+test('lava emits block light into surrounding air', () => {
+  const world = new World();
+  world.data.fill(0);
+  world.set(20, 30, 20, 8);
+
+  const lighting = new VoxelLighting();
+  lighting.update(world);
+
+  assert.equal(lighting.sample(21, 30, 20)[1], 14 / 15);
+  assert.equal(lighting.sample(22, 30, 20)[1], 13 / 15);
+});
+
 test('leaf cutouts transmit skylight and do not add ambient occlusion', () => {
   const world = new World(); world.data.fill(0);
   world.set(20, 20, 20, 6);

@@ -21,6 +21,8 @@ Hold left or right mouse button to keep breaking or placing blocks. The first ac
 
 Select **7 — Glow Brick** to place a warm light source. Glow bricks stay bright at night and illuminate nearby air up to 14 blocks away along unobstructed paths. Solid blocks stop the light; removing a glow brick updates nearby surfaces. Vertex ambient occlusion darkens corners and crevices, while fixed face shading and propagated skylight give terrain a voxel-style appearance. Light and AO update across chunk boundaries. Existing saves remain compatible.
 
+Lava (block ID 8) animates through the four atlas frames at 5 frames per second. Its chunk geometry stays intact; only the affected UV attributes update as the animation advances.
+
 A sun and moon track a ten-minute day/night cycle with changing sky, fog, and lighting. The cycle pauses when gameplay is paused and its progress is autosaved. Night retains enough ambient light to build and explore. Adjust `DAY_DURATION` in `src/world/day-cycle.ts` to change the cycle length.
 
 ```sh
@@ -35,7 +37,7 @@ npm run preview
 
 World faces and hotbar icons use `public/atlas.png`. The image is 1024 × 1024 pixels; texture rectangles are measured from its top-left corner. Rendering uses nearest filtering without mipmaps, plus half-pixel UV insets to avoid neighboring tiles bleeding into faces. AO, face shading, and glow lighting still multiply the textured surface.
 
-Open **Settings → Atlas tile picker**. Click a tile to select a 16 × 16 rectangle. Zoom and scroll to inspect small tiles, or type x, y, width, and height for larger/non-grid rectangles. The preview and copyable definition update immediately. Selecting a tile only inspects it; it does not edit your world or block definitions.
+Open **Settings → Open atlas picker** to launch the atlas in a separate window. Click a tile to select a 16 × 16 rectangle. Zoom and scroll to inspect small tiles, or type x, y, width, and height for larger/non-grid rectangles. Use **Copy x, y** for a concise pair such as `416, 80`, or **Copy full rectangle** for all four values. The preview and coordinates update immediately. Selecting a tile only inspects it; it does not edit your world or block definitions.
 
 In `src/world/blocks.ts`, append a new entry to `BLOCKS`:
 
@@ -56,7 +58,7 @@ Replace these example wood rectangles with values from the picker. `Atlas.all(x,
 
 If replacing the image with a differently sized atlas, update `Atlas.width` and `Atlas.height` and the block rectangles. Existing world saves do not store textures and need no migration.
 
-Manual atlas checks pending (browser automation unavailable): inspect grass/log top, bottom, and side faces; verify glow bricks at night and AO at corners; select tiles after scrolling and zooming; check custom rectangles and clipboard fallback; reload an existing save.
+Manual atlas checks pending (browser automation unavailable): open the picker in a separate window; select tiles after scrolling and zooming; try both clipboard buttons and the clipboard fallback; inspect grass/log top, bottom, and side faces; verify glow bricks at night and AO at corners; reload an existing save.
 
 - `src/world`: deterministic terrain, block data, edit invalidation, voxel ray traversal.
 - `src/rendering`: exposed-face chunk meshes, lighting, procedural texture, target outline.

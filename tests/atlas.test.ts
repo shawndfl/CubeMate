@@ -7,6 +7,7 @@ import { Player } from '../src/player/physics.ts';
 import { serialize, restore } from '../src/game/save.ts';
 import { Texture } from 'three';
 import { voxelMaterial } from '../src/rendering/voxel-material.ts';
+import { LavaAnimation } from '../src/rendering/lava-animation.ts';
 
 test('atlas UVs flip the image Y axis and stay inside the selected rectangle', () => {
   const rect = { x: 32, y: 64, width: 16, height: 32 };
@@ -20,7 +21,7 @@ test('atlas UVs flip the image Y axis and stay inside the selected rectangle', (
 });
 
 test('face mapping chooses top, bottom, and side without changing block IDs', () => {
-  assert.deepEqual(BLOCKS.map(block => block.name), ['Air', 'Grass', 'Dirt', 'Stone', 'Sand', 'Wood', 'Leaves', 'Glow Brick']);
+  assert.deepEqual(BLOCKS.map(block => block.name), ['Air', 'Grass', 'Dirt', 'Stone', 'Sand', 'Wood', 'Leaves', 'Glow Brick', 'Lava']);
   assert.equal(GLOW_BRICK, 7);
   for (const block of BLOCKS) {
     assert.ok(Atlas.valid(block.textures.top));
@@ -58,4 +59,21 @@ test('voxel atlas material cuts out alpha without enabling blending', () => {
   assert.equal(material.transparent, false);
   assert.equal(material.depthWrite, true);
   material.dispose();
+});
+
+test('lava animation follows its four atlas frames and loops at a steady rate', () => {
+  const lava = BLOCKS[8];
+  assert.deepEqual(lava.animation?.map(rect => [rect.x, rect.y]), [[128, 32], [144, 32], [144, 48], [128, 32]]);
+  const animation = new LavaAnimation();
+  assert.equal(animation.frame, 0);
+  assert.equal(animation.advance(0.19), false);
+  assert.equal(animation.advance(0.01), true);
+  assert.equal(animation.frame, 1);
+  assert.equal(animation.advance(0.2), true);
+  assert.equal(animation.frame, 2);
+  assert.equal(animation.advance(0.2), true);
+  assert.equal(animation.frame, 3);
+  assert.equal(animation.advance(0.2), true);
+  assert.equal(animation.frame, 0);
+  assert.equal(animation.advance(-1), false);
 });

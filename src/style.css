@@ -58,19 +58,6 @@ body:not(.playing) .inspect-status { display: none; }
 .settings-panel input { width: 100%; margin: 20px 0; accent-color: #e9c988; }
 .settings-panel p { font-size: 12px; margin-bottom: 15px; }
 .settings-message { font-size: 12px; line-height: 1.5; margin-bottom: 20px; color: #edce8d; }
-.tile-picker { margin: 20px 0; border-top: 1px solid #ffffff40; padding-top: 15px; }
-.tile-picker summary { cursor: pointer; color: #edce8d; margin-bottom: 15px; }
-.atlas-scroll { overflow: auto; max-height: 300px; margin: 12px 0; border: 1px solid #ffffff55; background: #202020; }
-.atlas-sheet { position: relative; }
-.atlas-sheet img { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: crosshair; }
-.atlas-selection { position: absolute; border: 1px solid #ffea00; outline: 1px solid #000; pointer-events: none; }
-.atlas-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.settings-panel .atlas-fields label { display: block; font-size: 11px; }
-.settings-panel .atlas-fields input { margin: 6px 0 12px; width: 100%; }
-.tile-picker input, .tile-picker select, .atlas-code { color: #fff9e9; background: #142924; border: 1px solid #ffffff55; border-radius: 3px; padding: 5px; }
-.atlas-code { display: block; width: 100%; resize: vertical; margin: 12px 0; font-size: 12px; }
-.atlas-preview { background-image: url('/atlas.png'); image-rendering: pixelated; border: 1px solid #ffffff55; box-sizing: content-box; }
-.atlas-message { font-size: 12px; line-height: 1.5; margin: 12px 0; }
 .block-icon { image-rendering: pixelated; }
 body:not(.playing) .hud { display: none; }
 @media (max-height: 650px) { .panel { top: 80px; transform: none; max-height: calc(100dvh - 110px); } }
