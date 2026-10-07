@@ -71,3 +71,32 @@ body:not(.playing) .inspect-status { display: none; }
 .picker-status { color: #edce8d; }
 body:not(.playing) .hud { display: none; }
 @media (max-height: 650px) { .panel { top: 80px; transform: none; max-height: calc(100dvh - 110px); } }
+
+/* Touch controls leave the center of the world clear for dragging and aiming. */
+canvas { touch-action: none; }
+.touch-controls { display: none; position: fixed; inset: 0; z-index: 3; pointer-events: none; user-select: none; -webkit-user-select: none; }
+.touch-mode.playing .touch-controls { display: block; }
+.touch-controls button { pointer-events: auto; touch-action: none; min-width: 48px; min-height: 48px; border: 1px solid #edce8d80; border-radius: 12px; background: #142924dd; color: #fff9e9; font-weight: 700; }
+.touch-controls button:active, .touch-controls button.held { background: #76673e; border-color: #edce8d; }
+.touch-toolbar { position: absolute; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); display: flex; gap: 8px; }
+.touch-toolbar button { padding: 8px 12px; font-size: 12px; }
+.touch-pad { position: absolute; bottom: calc(104px + env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); display: grid; grid-template-columns: repeat(3, 48px); gap: 6px; }
+.touch-pad button { font-size: 26px; }
+.touch-pad [data-key="KeyW"] { grid-column: 2; }
+.touch-pad [data-key="KeyA"] { grid-column: 1; grid-row: 2; }
+.touch-pad [data-key="KeyS"] { grid-column: 2; grid-row: 2; }
+.touch-pad [data-key="KeyD"] { grid-column: 3; grid-row: 2; }
+.touch-actions { position: absolute; right: max(12px, env(safe-area-inset-right)); bottom: calc(104px + env(safe-area-inset-bottom)); display: grid; gap: 8px; }
+.touch-actions button { min-width: 90px; padding: 12px; }
+.touch-mode .hud { width: min(540px, calc(100vw - 24px)); bottom: calc(10px + env(safe-area-inset-bottom)); }
+.touch-mode .hotbar { overflow-x: auto; touch-action: pan-x; }
+.touch-mode .slot { flex: 0 0 48px; height: 48px; }
+.touch-mode .hints, .touch-mode .instructions, .touch-mode .world-tag, .touch-mode .badge, .touch-mode .version, .touch-mode .coordinates { display: none; }
+.touch-mode.playing .brand, .touch-mode.playing .save-status { display: none; }
+.touch-mode .panel { max-height: calc(100dvh - 110px); }
+.touch-mode .block-picker { padding: 16px; }
+.touch-mode .inspect-status { top: 70px; }
+@media (max-height: 450px) {
+  .touch-mode .hud { width: min(340px, calc(100vw - 340px)); }
+  .touch-pad, .touch-actions { bottom: max(12px, env(safe-area-inset-bottom)); }
+}

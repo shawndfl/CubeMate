@@ -16,6 +16,7 @@ export class UI {
   onBack = () => {};
   onAtlasPicker = () => {};
   onSensitivity = (_value: number) => {};
+  onSelection = () => {};
   constructor(root: HTMLElement) {
     root.insertAdjacentHTML('beforeend', `
       <header class="brand"><span class="brand-icon">◆</span><strong>CUBEMATE</strong><span class="badge">SANDBOX / 01</span></header>
@@ -69,7 +70,7 @@ export class UI {
       icon.style.backgroundImage = `url('${Atlas.url}')`;
       icon.style.backgroundSize = `${Atlas.width * 25 / rect.width}px ${Atlas.height * 27 / rect.height}px`;
       icon.style.backgroundPosition = `${-rect.x * 25 / rect.width}px ${-rect.y * 27 / rect.height}px`;
-      button.addEventListener('click', () => this.select(index)); bar.append(button); return button;
+      button.addEventListener('click', () => { this.select(index); this.onSelection(); }); bar.append(button); return button;
     });
     this.picker = new BlockPicker(root, this.hotbar);
     this.picker.onChange = () => {
@@ -80,12 +81,20 @@ export class UI {
         button.setAttribute('aria-label', button.title);
       });
       this.select(this.selected);
+      this.onSelection();
       try { localStorage.setItem('cubemate.hotbar.v1', JSON.stringify(this.hotbar.blocks)); }
       catch { this.picker.error('Hotbar updated, but could not save it in this browser.'); }
     };
     this.select(0);
   }
   get selectedBlock() { return this.hotbar.blocks[this.selected]; }
+  setTouchMode(enabled: boolean) {
+    document.body.classList.toggle('touch-mode', enabled);
+    this.status.textContent = enabled
+      ? 'Drag to look. Use arrows to move and Jump to hop. Aim the crosshair, then tap Add or Delete. Tap Blocks to customize your hotbar. Saves automatically.'
+      : 'Desktop · keyboard & mouse · saves automatically in this browser';
+    this.panel.querySelector('label[for="sensitivity"]')!.firstChild!.textContent = enabled ? 'Look sensitivity ' : 'Mouse sensitivity ';
+  }
   select(index: number) {
     if (!Number.isInteger(index) || index < 0 || index >= this.slots.length) index = 0;
     this.selected = index;

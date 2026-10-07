@@ -7,7 +7,7 @@ type Effects = {
   changed: (state: GameState) => void;
 };
 
-/** Owns navigation and only enters gameplay after a requested pointer lock succeeds. */
+/** Owns navigation for captured mouse and touch gameplay. */
 export class GameStates {
   private current: GameState = 'main';
   private settingsOrigin: 'main' | 'paused' = 'main';
@@ -24,6 +24,9 @@ export class GameStates {
     return true;
   }
   cancelPlay() { this.pendingPlay = false; }
+  startTouch() {
+    if (this.requestPlay()) this.transition('playing');
+  }
   pointerChanged(locked: boolean) {
     if (locked) {
       if (this.playing) return;

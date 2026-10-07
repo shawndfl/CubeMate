@@ -6,6 +6,7 @@ export class Input {
   locked = false;
   enabled = true;
   onBlur = () => {};
+  onReset = () => {};
   onLock = (_locked: boolean) => {};
   onLook = (_x: number, _y: number) => {};
   onSelect = (_slot: number) => {};
@@ -64,6 +65,7 @@ export class Input {
   reset() {
     this.keys.clear();
     this.stopActions();
+    this.onReset();
   }
   private stopAction(button: number) {
     const timer = this.repeatTimers.get(button);

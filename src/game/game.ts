@@ -3,6 +3,8 @@ import { World } from '../world/world.ts';
 import { trace } from '../world/raycast.ts';
 import { Player, EYE_HEIGHT, overlaps } from '../player/physics.ts';
 import { Input } from '../input/input.ts';
+import { TouchInput } from '../input/touch-input.ts';
+import { TouchControls } from '../ui/touch-controls.ts';
 import { View } from '../rendering/renderer.ts';
 import { UI } from '../ui/ui.ts';
 import { AutoSave, restore, SAVE_KEY } from './save.ts';
@@ -24,6 +26,15 @@ export class Game {
     const world = new World();
     const player = new Player(world);
     const input = new Input(view.renderer.domElement);
+    const touch = new TouchControls(root);
+    new TouchInput(view.renderer.domElement, touch.element, input);
+    let touchMode = matchMedia('(pointer: coarse)').matches;
+    const setTouchMode = (enabled: boolean) => {
+      touchMode = enabled;
+      ui.setTouchMode(enabled);
+    };
+    setTouchMode(touchMode);
+    ui.start.addEventListener('pointerdown', event => setTouchMode(event.pointerType !== 'mouse'));
     input.enabled = false;
     let sensitivity = DEFAULT_SENSITIVITY;
     try { sensitivity = parseSensitivity(localStorage.getItem(SETTINGS_KEY)); }
@@ -50,6 +61,10 @@ export class Game {
     ui.onSettings = () => states.settings();
     ui.onMainMenu = () => states.mainMenu();
     ui.onBack = () => states.back();
+    touch.onBlocks = () => states.blocks();
+    touch.onPause = () => states.pause();
+    touch.onAction = button => input.onAction(button);
+    ui.onSelection = () => autosave.schedule();
     ui.onAtlasPicker = () => {
       const picker = window.open('./atlas-picker.html', 'cubemate-atlas-picker', 'popup,width=1120,height=850,resizable=yes,scrollbars=yes');
       if (!picker) ui.settingsStatus('The picker window was blocked. Allow popups for this site and retry.');
@@ -109,6 +124,7 @@ export class Game {
       else states.pause();
     });
     const resume = () => {
+      if (touchMode) { states.startTouch(); return; }
       if (!states.requestPlay()) return;
       input.lock().catch(() => {
         states.cancelPlay();
